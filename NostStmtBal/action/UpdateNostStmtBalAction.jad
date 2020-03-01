@@ -1,0 +1,234 @@
+// Decompiled by DJ v3.7.7.81 Copyright 2004 Atanas Neshkov  Date: 31/03/2006 15:26:13
+// Home Page : http://members.fortunecity.com/neshkov/dj.html  - Check often for new version!
+// Decompiler options: packimports(3) 
+// Source File Name:   UpdateNostStmtBalAction.java
+
+package com.iddm.portlet.NostStmtBal.action;
+
+import com.HibernateUtil;
+import com.iddm.portal.service.persistence.IDDNostStmtBal;
+import com.iddm.util.*;
+import com.liferay.portal.struts.PortletAction;
+import com.liferay.portal.util.PortalUtil;
+import com.liferay.util.ParamUtil;
+import com.liferay.util.StringUtil;
+import java.io.PrintStream;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import javax.portlet.*;
+import org.apache.struts.action.*;
+import org.hibernate.*;
+
+public class UpdateNostStmtBalAction extends PortletAction
+{
+
+    public UpdateNostStmtBalAction()
+    {
+    }
+
+    public void processAction(ActionMapping actionmapping, ActionForm actionform, PortletConfig portletconfig, ActionRequest actionrequest, ActionResponse actionresponse)
+        throws Exception
+    {
+        Validator validator;
+        String s;
+        String s2;
+        String s3;
+        LogTracer logtracer;
+        validator = new Validator();
+        s = PortalUtil.getUserId(actionrequest);
+        String s1 = "25";
+        s2 = "Nostro Statement Balance - Save";
+        s3 = "Nostro Statement Balance";
+        String s4 = "/html/common/frmError.jsp";
+        logtracer = new LogTracer("No." + s1, s3, "UpdateNostStmtBalAction.java", new Date());
+        String s5 = ParamUtil.getString(actionrequest, "cmd") != null ? ParamUtil.getString(actionrequest, "cmd") : "";
+        System.out.println("cmd-->" + s5);
+        if(!s5.equals("update"))
+            break MISSING_BLOCK_LABEL_1788;
+        System.out.println("Update Nostro Statement Balance Security Check");
+        System.out.println("user id " + s);
+        PortletActionMaintenanceObject portletactionmaintenanceobject;
+        try
+        {
+            portletactionmaintenanceobject = new PortletActionMaintenanceObject();
+            System.out.println("Check Object Init");
+            if(!portletactionmaintenanceobject.objectInit(s, s3, s4))
+            {
+                System.out.println("Maintenance Object Init Failed");
+                actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmAuthFail.jsp");
+                return;
+            }
+        }
+        catch(Exception exception)
+        {
+            exception.printStackTrace();
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmAuthFail.jsp");
+            return;
+        }
+        System.out.println("Check Access Time");
+        if(!portletactionmaintenanceobject.checkAccessTime())
+        {
+            System.out.println("Access Time Invalid");
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmSystemFail.jsp");
+            return;
+        }
+        if(!portletactionmaintenanceobject.checkAuthorized(s, s1, s3))
+        {
+            System.out.println("Unauthorized User ...." + s);
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmAccessDenied.jsp");
+            return;
+        }
+        if(!portletactionmaintenanceobject.checkTaskAssignment(s2))
+        {
+            System.out.println("No Task Assign to access the page " + s + s2);
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmTaskDenied.jsp");
+            return;
+        }
+        if(!portletactionmaintenanceobject.writeAuditTrail(s2, s))
+        {
+            System.out.println("Insert Audit Trail Failed");
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmAuditTrailFail.jsp");
+            return;
+        }
+        ArrayList arraylist;
+        Session session;
+        Transaction transaction;
+        System.out.println("Parameter for data: " + ParamUtil.getString(actionrequest, "NostStmtBal"));
+        String as[] = StringUtil.split(ParamUtil.getString(actionrequest, "NostStmtBal"), "_");
+        arraylist = new ArrayList();
+        for(int i = 0; i < as.length; i++)
+        {
+            String as1[] = StringUtil.split(as[i], "@");
+            arraylist.add(as1);
+        }
+
+        SimpleDateFormat simpledateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        ArrayList arraylist1 = new ArrayList();
+        session = HibernateUtil.currentSession();
+        String s6 = "";
+        transaction = session.beginTransaction();
+        int j = 0;
+_L1:
+        String as2[];
+        if(j >= arraylist.size())
+            break MISSING_BLOCK_LABEL_1701;
+        as2 = (String[])arraylist.get(j);
+        String s8;
+        try
+        {
+            if(!validator.isValidShortDate(as2[0]))
+            {
+                String s7 = "Invalid Date format (" + as2[0] + ")";
+                actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmError.jsp?ex=" + s7 + "&portletName=" + s3 + "&taskName=" + s2);
+                return;
+            }
+        }
+        catch(Exception exception2)
+        {
+            String s9 = "Invalid Parameter.";
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmError.jsp?ex=" + s9 + "&portletName=" + s3 + "&taskName=" + s2);
+            return;
+        }
+        validator;
+        if(!Validator.checkValidCharacter(as2[1], "0123456789"))
+        {
+            s8 = "Invalid Branch code format (" + as2[1] + ")";
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmError.jsp?ex=" + s8 + "&portletName=" + s3 + "&taskName=" + s2);
+            return;
+        }
+        validator;
+        if(!Validator.checkValidCharacter(as2[2], "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"))
+        {
+            s8 = "Invalid Nostro Account format (" + as2[2] + ")";
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmError.jsp?ex=" + s8 + "&portletName=" + s3 + "&taskName=" + s2);
+            return;
+        }
+        validator;
+        if(!Validator.checkValidCharacter(as2[3], "0123456789"))
+        {
+            s8 = "Invalid Customer no. format (" + as2[3] + ")";
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmError.jsp?ex=" + s8 + "&portletName=" + s3 + "&taskName=" + s2);
+            return;
+        }
+        validator;
+        if(!Validator.isValidCurrency(as2[4], 3))
+        {
+            s8 = "Invalid currency format (" + as2[4] + ")";
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmError.jsp?ex=" + s8 + "&portletName=" + s3 + "&taskName=" + s2);
+            return;
+        }
+        validator;
+        if(!Validator.checkValidCharacter(as2[5], "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"))
+        {
+            s8 = "Invalid Source format (" + as2[5] + ")";
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmError.jsp?ex=" + s8 + "&portletName=" + s3 + "&taskName=" + s2);
+            return;
+        }
+        validator;
+        if(!Validator.DoubleOnly(as2[6]))
+        {
+            s8 = "Invalid amount format (" + as2[6] + ")";
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmError.jsp?ex=" + s8 + "&portletName=" + s3 + "&taskName=" + s2);
+            return;
+        }
+        try
+        {
+            String s11 = as2[7];
+            System.out.println("Now :" + s11);
+            Query query = session.createQuery("select NostStmtBal from IDDNostStmtBal as NostStmtBal where NostStmtBal.primaryKey.Date = :date and NostStmtBal.primaryKey.Brch_code = :brch and NostStmtBal.primaryKey.Nost_acct = :nost and NostStmtBal.primaryKey.Src = :src");
+            query.setString("date", as2[0]);
+            query.setString("brch", as2[1]);
+            query.setString("nost", as2[2]);
+            query.setString("src", as2[5]);
+            List list = query.list();
+            System.out.println("getExistNostStmtBal:size->" + list.size());
+            System.out.println("date->" + as2[0]);
+            System.out.println("brch->" + as2[1]);
+            System.out.println("nost->" + as2[2]);
+            System.out.println("src->" + as2[5]);
+            if(list.size() == 0)
+            {
+                IDDNostStmtBal iddnoststmtbal = new IDDNostStmtBal();
+                iddnoststmtbal.setDate(as2[0]);
+                iddnoststmtbal.setBrch_code(as2[1]);
+                iddnoststmtbal.setNost_acct(as2[2]);
+                iddnoststmtbal.setCust_no(as2[3]);
+                iddnoststmtbal.setCurr(as2[4]);
+                iddnoststmtbal.setBal_amt_LC(Double.parseDouble(as2[6]));
+                iddnoststmtbal.setSrc(as2[5]);
+                iddnoststmtbal.setCrt_TMS(s11);
+                iddnoststmtbal.setLast_mod_TMS(s11);
+                iddnoststmtbal.setCrt_UID(s);
+                iddnoststmtbal.setLast_mod_UID(s);
+                iddnoststmtbal.setLast_upd_pgm("UpdateNostStmtBalAction");
+                session.save(iddnoststmtbal);
+            } else
+            {
+                String s10 = "Record already inserted into database.";
+                actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmError.jsp?ex=" + s10 + "&portletName=" + s3 + "&taskName=" + s2);
+                return;
+            }
+        }
+        catch(Exception exception1)
+        {
+            System.out.println("Exception:" + exception1);
+            logtracer.display();
+            if(transaction != null)
+                transaction.rollback();
+            throw exception1;
+        }
+        j++;
+          goto _L1
+        transaction.commit();
+        HibernateUtil.closeSession();
+        PortletSession portletsession = actionrequest.getPortletSession(false);
+        portletsession.setAttribute("NostStmtBalUpdate", "Y");
+        logtracer.display();
+    }
+
+    public ActionForward render(ActionMapping actionmapping, ActionForm actionform, PortletConfig portletconfig, RenderRequest renderrequest, RenderResponse renderresponse)
+        throws Exception
+    {
+        return actionmapping.findForward("portlet.iddm.view");
+    }
+}

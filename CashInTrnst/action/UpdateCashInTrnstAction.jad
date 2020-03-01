@@ -1,0 +1,205 @@
+// Decompiled by DJ v3.7.7.81 Copyright 2004 Atanas Neshkov  Date: 24/02/2006 15:34:35
+// Home Page : http://members.fortunecity.com/neshkov/dj.html  - Check often for new version!
+// Decompiler options: packimports(3) 
+// Source File Name:   UpdateCashInTrnstAction.java
+
+package com.iddm.portlet.CashInTrnst.action;
+
+import com.HibernateUtil;
+import com.iddm.portal.service.persistence.IDDCashInTrnst;
+import com.iddm.util.LogTracer;
+import com.iddm.util.PortletActionMaintenanceObject;
+import com.liferay.portal.struts.PortletAction;
+import com.liferay.portal.util.PortalUtil;
+import com.liferay.util.ParamUtil;
+import com.liferay.util.StringUtil;
+import java.io.PrintStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import javax.portlet.*;
+import org.apache.struts.action.*;
+import org.hibernate.*;
+
+public class UpdateCashInTrnstAction extends PortletAction
+{
+
+    public UpdateCashInTrnstAction()
+    {
+    }
+
+    public void processAction(ActionMapping actionmapping, ActionForm actionform, PortletConfig portletconfig, ActionRequest actionrequest, ActionResponse actionresponse)
+        throws Exception
+    {
+        String s;
+        LogTracer logtracer;
+        s = PortalUtil.getUserId(actionrequest);
+        String s1 = "19";
+        String s2 = "Cash in Transit - Save";
+        String s3 = "Cash in Transit";
+        String s4 = "/html/common/frmError.jsp";
+        logtracer = new LogTracer("No." + s1, s3, "UpdateCashInTrnstAction.java", new Date());
+        String s5 = ParamUtil.getString(actionrequest, "cmd") != null ? ParamUtil.getString(actionrequest, "cmd") : "";
+        logtracer.append("cmd-->" + s5);
+        if(!s5.equals("update"))
+            break MISSING_BLOCK_LABEL_1510;
+        logtracer.append("Update Cash in Transit Security Check");
+        logtracer.append("user id " + s);
+        PortletActionMaintenanceObject portletactionmaintenanceobject;
+        try
+        {
+            portletactionmaintenanceobject = new PortletActionMaintenanceObject();
+            logtracer.append("Check Object Init");
+            if(!portletactionmaintenanceobject.objectInit(s, s3, s4))
+            {
+                logtracer.append("Maintenance Object Init Failed");
+                actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmAuthFail.jsp");
+                return;
+            }
+        }
+        catch(Exception exception)
+        {
+            exception.printStackTrace();
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmAuthFail.jsp");
+            return;
+        }
+        logtracer.append("Check Access Time");
+        if(!portletactionmaintenanceobject.checkAccessTime())
+        {
+            logtracer.append("Access Time Invalid");
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmSystemFail.jsp");
+            return;
+        }
+        if(!portletactionmaintenanceobject.checkAuthorized(s, s1, s3))
+        {
+            logtracer.append("Unauthorized User ...." + s);
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmAccessDenied.jsp");
+            return;
+        }
+        if(!portletactionmaintenanceobject.checkTaskAssignment(s2))
+        {
+            logtracer.append("No Task Assign to access the page " + s + s2);
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmTaskDenied.jsp");
+            return;
+        }
+        if(!portletactionmaintenanceobject.writeAuditTrail(s2, s))
+        {
+            logtracer.append("Insert Audit Trail Failed");
+            actionresponse.sendRedirect("/iddm/html/portlet/iddm/common/frmAuditTrailFail.jsp");
+            return;
+        }
+        logtracer.append("Parameter for data: " + ParamUtil.getString(actionrequest, "cashTrnstOut"));
+        String as[] = StringUtil.split(ParamUtil.getString(actionrequest, "cashTrnstOut"), "_");
+        logtracer.append("Parameter for data: " + ParamUtil.getString(actionrequest, "cashTrnstIn"));
+        String as1[] = StringUtil.split(ParamUtil.getString(actionrequest, "cashTrnstIn"), "_");
+        ArrayList arraylist = new ArrayList();
+        for(int i = 0; i < as.length; i++)
+        {
+            String as2[] = StringUtil.split(as[i], "@");
+            arraylist.add(as2);
+        }
+
+        ArrayList arraylist1 = new ArrayList();
+        for(int j = 0; j < as1.length; j++)
+        {
+            String as3[] = StringUtil.split(as1[j], "@");
+            arraylist1.add(as3);
+        }
+
+        SimpleDateFormat simpledateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        SimpleDateFormat simpledateformat1 = new SimpleDateFormat("yyyy-MM-dd");
+        ArrayList arraylist2 = new ArrayList();
+        ArrayList arraylist3 = new ArrayList();
+        Session session = HibernateUtil.currentSession();
+        Transaction transaction = session.beginTransaction();
+        try
+        {
+            for(int k = 0; k < arraylist1.size(); k++)
+            {
+                String as4[] = (String[])arraylist1.get(k);
+                Date date = simpledateformat.parse(as4[4]);
+                String s6 = as4[4];
+                Query query = session.createQuery("select cashInTrnst from IDDCashInTrnst as cashInTrnst where cashInTrnst.primaryKey.Date = :date and cashInTrnst.primaryKey.Curr = :curr and cashInTrnst.primaryKey.Txn_type = :flow and cashInTrnst.primaryKey.Last_mod_TMS = :LmTMS");
+                query.setString("date", as4[0]);
+                query.setString("curr", as4[1]);
+                query.setString("flow", as4[3]);
+                query.setString("LmTMS", s6);
+                List list = query.list();
+                System.out.println("getExistcashTrnstIn:size->" + list.size());
+                System.out.println("date->" + as4[0]);
+                System.out.println("curr->" + as4[1]);
+                System.out.println("amt->" + as4[2]);
+                System.out.println("flow->" + as4[3]);
+                System.out.println("LmTMS->" + s6);
+                if(list.size() == 0)
+                {
+                    IDDCashInTrnst iddcashintrnst = new IDDCashInTrnst();
+                    iddcashintrnst.setDate(as4[0]);
+                    iddcashintrnst.setCurr(as4[1]);
+                    iddcashintrnst.setAmt_MYR(Double.parseDouble(as4[3]));
+                    iddcashintrnst.setTxn_type(as4[2]);
+                    iddcashintrnst.setCrt_TMS(date);
+                    iddcashintrnst.setLast_mod_TMS(s6);
+                    iddcashintrnst.setCrt_UID(s);
+                    iddcashintrnst.setLast_mod_UID(s);
+                    iddcashintrnst.setLast_upd_pgm("UpdateCashInTrnstAction");
+                    iddcashintrnst.setDel_flag("N");
+                    session.save(iddcashintrnst);
+                }
+            }
+
+            for(int l = 0; l < arraylist.size(); l++)
+            {
+                String as5[] = (String[])arraylist.get(l);
+                Date date1 = simpledateformat.parse(as5[4]);
+                String s7 = as5[4];
+                Query query1 = session.createQuery("select cashInTrnst from IDDCashInTrnst as cashInTrnst where cashInTrnst.primaryKey.Date = :date and cashInTrnst.primaryKey.Curr = :curr  and cashInTrnst.primaryKey.Txn_type = :flow and cashInTrnst.primaryKey.Last_mod_TMS = :LmTMS");
+                query1.setString("date", as5[0]);
+                query1.setString("curr", as5[1]);
+                query1.setString("flow", as5[3]);
+                query1.setString("LmTMS", s7);
+                List list1 = query1.list();
+                System.out.println("getExistcashTrnstOut:size->" + list1.size());
+                System.out.println("date->" + as5[0]);
+                System.out.println("curr->" + as5[1]);
+                System.out.println("amt->" + as5[2]);
+                System.out.println("flow->" + as5[3]);
+                System.out.println("LmTMS->" + s7);
+                if(list1.size() == 0)
+                {
+                    IDDCashInTrnst iddcashintrnst1 = new IDDCashInTrnst();
+                    iddcashintrnst1.setDate(as5[0]);
+                    iddcashintrnst1.setCurr(as5[1]);
+                    iddcashintrnst1.setAmt_MYR(Double.parseDouble(as5[3]));
+                    iddcashintrnst1.setTxn_type(as5[2]);
+                    iddcashintrnst1.setCrt_TMS(date1);
+                    iddcashintrnst1.setLast_mod_TMS(s7);
+                    iddcashintrnst1.setCrt_UID(s);
+                    iddcashintrnst1.setLast_mod_UID(s);
+                    iddcashintrnst1.setLast_upd_pgm("UpdateCashInTrnstAction");
+                    iddcashintrnst1.setDel_flag("N");
+                    session.save(iddcashintrnst1);
+                }
+            }
+
+            transaction.commit();
+            HibernateUtil.closeSession();
+            PortletSession portletsession = actionrequest.getPortletSession(false);
+            portletsession.setAttribute("cashInTrnstUpdate", "Y");
+            logtracer.display();
+        }
+        catch(Exception exception1)
+        {
+            logtracer.append("Exception:" + exception1);
+            if(transaction != null)
+                transaction.rollback();
+            throw exception1;
+        }
+    }
+
+    public ActionForward render(ActionMapping actionmapping, ActionForm actionform, PortletConfig portletconfig, RenderRequest renderrequest, RenderResponse renderresponse)
+        throws Exception
+    {
+        return actionmapping.findForward("portlet.iddm.view");
+    }
+}
